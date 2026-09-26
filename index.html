@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hype or Not</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#14202B; --navy-2:#1C2C3A;
+    --paper:#F4EFE3; --paper-dim:#E7E0CE;
+    --ink:#1E1B16;
+    --mustard:#E3A23C; --mustard-dark:#8A5D1F;
+    --sage:#6B8F71; --sage-dark:#3D5842;
+    --coral:#D9634A; --coral-dark:#8A3625;
+    --line: rgba(244,239,227,0.14);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--navy);color:var(--paper);font-family:'Work Sans', sans-serif;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:760px;margin:0 auto;padding:2.5rem 1.5rem 4rem;}
+  .masthead{display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid var(--paper);padding-bottom:1rem;margin-bottom:0.5rem;}
+  .masthead h1{font-family:'Fraunces', serif;font-weight:700;font-size:2.6rem;letter-spacing:-0.01em;margin:0;}
+  .masthead h1 span{color:var(--mustard);}
+  .masthead .tag{font-family:'JetBrains Mono', monospace;font-size:0.7rem;color:var(--paper-dim);text-transform:uppercase;letter-spacing:0.08em;}
+  .subhead{font-family:'Fraunces', serif;font-style:italic;font-size:1.05rem;color:var(--paper-dim);margin:0.9rem 0 1.6rem;}
+
+  .search-row{display:flex;gap:0.6rem;margin-bottom:0.6rem;}
+  #bookInput{flex:1;padding:0.85rem 1rem;border-radius:2px;border:1.5px solid var(--paper);background:var(--paper);color:var(--ink);font-family:'Work Sans',sans-serif;font-size:1rem;}
+  #bookInput:focus{outline:2px solid var(--mustard);}
+  #bookInput:disabled{opacity:0.6;}
+  #checkBtn{padding:0.85rem 1.4rem;border-radius:2px;border:none;background:var(--mustard);color:var(--ink);font-weight:600;font-family:'Work Sans',sans-serif;font-size:0.95rem;cursor:pointer;min-width:110px;}
+  #checkBtn:hover{background:#EDB65C;}
+  #checkBtn:disabled{opacity:0.65;cursor:default;}
+  .hint{font-size:0.78rem;color:var(--paper-dim);margin:0 0 1.4rem;}
+  .hint button{background:none;border:none;color:var(--mustard);cursor:pointer;font-size:0.78rem;text-decoration:underline;padding:0;font-family:inherit;}
+
+  .recent-row{display:flex;flex-wrap:wrap;gap:0.5rem;margin:0 0 2rem;}
+  .recent-chip{padding:0.4rem 0.8rem;border-radius:20px;border:1px solid var(--line);background:var(--navy-2);color:var(--paper-dim);font-size:0.78rem;cursor:pointer;font-family:'Work Sans',sans-serif;}
+  .recent-chip:hover{border-color:var(--mustard);color:var(--paper);}
+  .recent-label{font-family:'JetBrains Mono',monospace;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--paper-dim);width:100%;margin-bottom:0.2rem;}
+
+  #result{display:none;}
+  .verdict-card{background:var(--paper);color:var(--ink);border-radius:4px;padding:1.8rem 1.6rem;margin-bottom:1.6rem;}
+  .book-title{font-family:'Fraunces', serif;font-weight:700;font-size:1.5rem;margin:0 0 0.15rem;}
+  .book-author{font-size:0.9rem;color:#5c5548;margin:0 0 1.4rem;}
+  .scores-row{display:flex;gap:1.6rem;flex-wrap:wrap;margin-bottom:0.4rem;}
+  .score-block{display:flex;align-items:center;gap:0.9rem;}
+  .gauge-num{font-family:'JetBrains Mono',monospace;font-size:2.4rem;font-weight:600;line-height:1;}
+  .gauge-label{font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:#5c5548;margin-bottom:0.35rem;}
+  .gauge-bar{width:64px;height:5px;border-radius:3px;background:#DDD5C0;overflow:hidden;}
+  .gauge-fill{height:100%;border-radius:3px;}
+  .gauge-fill.hype{background:var(--mustard);}
+  .gauge-fill.reader{background:var(--sage);}
+  .verdict-text{font-family:'Fraunces', serif;font-weight:600;font-size:1.25rem;margin-top:1rem;}
+  .verdict-sub{font-family:'Work Sans',sans-serif;font-weight:400;font-size:0.85rem;color:#5c5548;margin-top:0.3rem;}
+  .badge{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em;padding:0.3rem 0.7rem;border-radius:20px;margin-bottom:0.6rem;}
+  .badge.good{background:rgba(107,143,113,0.22);color:var(--sage-dark);}
+  .badge.bad{background:rgba(217,99,74,0.18);color:var(--coral-dark);}
+  .badge.neutral{background:rgba(227,162,60,0.22);color:var(--mustard-dark);}
+  .cached-note{font-size:0.75rem;color:#8a8270;margin-top:0.9rem;font-style:italic;}
+
+  .split{display:grid;grid-template-columns:1fr;gap:1rem;margin-bottom:1.6rem;}
+  @media(min-width:600px){.split{grid-template-columns:1fr 1fr;}}
+  .panel{border-radius:4px;padding:1.3rem 1.2rem;}
+  .panel.hype{background:rgba(227,162,60,0.14);border:1px solid rgba(227,162,60,0.4);}
+  .panel.real{background:rgba(107,143,113,0.16);border:1px solid rgba(107,143,113,0.4);}
+  .panel h3{font-family:'JetBrains Mono',monospace;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;margin:0 0 0.8rem;}
+  .panel.hype h3{color:var(--mustard);}
+  .panel.real h3{color:var(--sage);}
+  .panel ul{margin:0;padding-left:1.1rem;}
+  .panel li{font-size:0.9rem;line-height:1.55;margin-bottom:0.55rem;color:var(--paper);}
+  .panel li:last-child{margin-bottom:0;}
+
+  .sources{font-size:0.75rem;color:var(--paper-dim);border-top:1px solid var(--line);padding-top:1rem;margin-bottom:2rem;}
+
+  .next-cycle{border:1px dashed rgba(244,239,227,0.35);border-radius:4px;padding:1.2rem 1.3rem;font-size:0.88rem;color:var(--paper-dim);display:flex;gap:0.9rem;align-items:flex-start;}
+  .next-cycle .dot{width:8px;height:8px;border-radius:50%;background:var(--coral);margin-top:0.4rem;flex-shrink:0;}
+  .next-cycle strong{color:var(--paper);font-weight:600;}
+
+  .empty{font-size:0.9rem;color:var(--paper-dim);border-top:1px solid var(--line);padding-top:1.6rem;}
+  .error{color:#F0A38F;}
+
+  .loading{display:none;font-size:0.85rem;color:var(--paper-dim);border-top:1px solid var(--line);padding-top:1.6rem;margin-bottom:1rem;align-items:center;gap:0.6rem;}
+  .loading.active{display:flex;}
+  .spinner{width:14px;height:14px;border-radius:50%;border:2px solid var(--line);border-top-color:var(--mustard);animation:spin 0.8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="masthead">
+    <h1>hype<span>·</span>or<span>·</span>not</h1>
+    <div class="tag">vol. 3</div>
+  </div>
+  <p class="subhead">A reality check before you buy the book everyone's talking about.</p>
+
+  <div class="search-row">
+    <input type="text" id="bookInput" placeholder="Type any book title…" />
+    <button id="checkBtn">Check it</button>
+  </div>
+  <p class="hint">Try <button onclick="document.getElementById('bookInput').value='Fourth Wing'; checkBook();">Fourth Wing</button> or type your own.</p>
+
+  <div id="recentRow" class="recent-row" style="display:none;"></div>
+
+  <div id="loading" class="loading"><div class="spinner"></div><span id="loadingMsg">Reading reviews…</span></div>
+  <div id="result"></div>
+  <div id="emptyState" class="empty" style="display:none;"></div>
+
+  <div class="next-cycle">
+    <div class="dot"></div>
+    <div><strong>Coming next cycle:</strong> can't get a clear verdict? Ask a reader — send your question straight to someone who's actually finished the book.</div>
+  </div>
+
+</div>
+
+<script>
+const btn = document.getElementById('checkBtn');
+const input = document.getElementById('bookInput');
+const resultEl = document.getElementById('result');
+const emptyEl = document.getElementById('emptyState');
+const loadingEl = document.getElementById('loading');
+const loadingMsg = document.getElementById('loadingMsg');
+const recentRow = document.getElementById('recentRow');
+
+const RECENT_STORAGE_KEY = 'hypeOrNot:recentBooks';
+
+function slugify(s){ return s.trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,''); }
+function cacheKeyFor(query){ return `book:${slugify(query)}`; }
+
+// Recent list lives in this browser only (localStorage), separate from the
+// shared review cache which lives server-side so every visitor benefits from it.
+function readRecent(){
+  try{
+    const raw = localStorage.getItem(RECENT_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  }catch(e){ return []; }
+}
+
+function addToRecent(query, cacheKey, title){
+  try{
+    let list = readRecent();
+    list = list.filter(item => item.cacheKey !== cacheKey);
+    list.unshift({ query, cacheKey, title: title || query });
+    list = list.slice(0, 8);
+    localStorage.setItem(RECENT_STORAGE_KEY, JSON.stringify(list));
+    renderRecent(list);
+  }catch(e){ console.error('Could not save recent search', e); }
+}
+
+function renderRecent(list){
+  if(!list || !list.length){ recentRow.style.display='none'; return; }
+  recentRow.style.display='flex';
+  recentRow.innerHTML = `<div class="recent-label">Recently checked</div>` +
+    list.map(item => `<button type="button" class="recent-chip" data-query="${item.query.replace(/"/g,'&quot;')}">${item.title}</button>`).join('');
+  recentRow.querySelectorAll('.recent-chip').forEach(chip=>{
+    chip.addEventListener('click', ()=>{ input.value = chip.dataset.query; checkBook(); });
+  });
+}
+
+renderRecent(readRecent());
+emptyEl.className = 'empty';
+emptyEl.style.display = 'block';
+emptyEl.textContent = 'Search a book above to see how the hype holds up against what readers actually say.';
+
+const loadingLines = ["Reading reviews…","Comparing the blurb to the backlash…","Separating marketing copy from reader reality…","Tallying the DNFs…"];
+
+function setLoading(on){
+  loadingEl.classList.toggle('active', on);
+  btn.disabled = on; input.disabled = on;
+  btn.textContent = on ? '…' : 'Check it';
+  if(on){
+    let i=0; loadingMsg.textContent = loadingLines[0];
+    window._loadingTimer = setInterval(()=>{ i=(i+1)%loadingLines.length; loadingMsg.textContent = loadingLines[i]; }, 1800);
+  } else clearInterval(window._loadingTimer);
+}
+
+function badgeFor(gap){
+  if(gap >= 15) return {text:'Underhyped gem', cls:'good'};
+  if(gap <= -15) return {text:'Overhyped', cls:'bad'};
+  return {text:'Hype checks out', cls:'neutral'};
+}
+
+function renderEntry(entry){
+  emptyEl.style.display='none';
+  resultEl.style.display='block';
+  const gap = entry.readerScore - entry.hypeLevel;
+  const badge = badgeFor(gap);
+  resultEl.innerHTML = `
+    <div class="verdict-card">
+      <p class="book-title">${entry.title}</p>
+      <p class="book-author">${entry.author}</p>
+      <div class="scores-row">
+        <div class="score-block">
+          <div>
+            <div class="gauge-num">${entry.hypeLevel}</div>
+            <div class="gauge-label">hype level</div>
+            <div class="gauge-bar"><div class="gauge-fill hype" style="width:${entry.hypeLevel}%"></div></div>
+          </div>
+        </div>
+        <div class="score-block">
+          <div>
+            <div class="gauge-num">${entry.readerScore}</div>
+            <div class="gauge-label">reader score</div>
+            <div class="gauge-bar"><div class="gauge-fill reader" style="width:${entry.readerScore}%"></div></div>
+          </div>
+        </div>
+      </div>
+      ${entry._cached ? `<div class="cached-note">Pulled from an earlier check — instant, no new search.</div>` : ''}
+      <span class="badge ${badge.cls}">${badge.text}</span>
+      <div class="verdict-text">${entry.verdict}</div>
+      <div class="verdict-sub">${entry.verdictSub}</div>
+    </div>
+    <div class="split">
+      <div class="panel hype">
+        <h3>What the hype says</h3>
+        <ul>${entry.hype.map(h=>`<li>${h}</li>`).join('')}</ul>
+      </div>
+      <div class="panel real">
+        <h3>What readers actually say</h3>
+        <ul>${entry.real.map(r=>`<li>${r}</li>`).join('')}</ul>
+      </div>
+    </div>
+    <div class="sources">${entry.sources}</div>
+  `;
+}
+
+function showError(msg){
+  resultEl.style.display='none';
+  emptyEl.style.display='block';
+  emptyEl.className = 'empty error';
+  emptyEl.textContent = msg;
+}
+
+async function checkBook(){
+  const query = input.value.trim();
+  if(!query){
+    resultEl.style.display='none';
+    emptyEl.className = 'empty'; emptyEl.style.display='block';
+    emptyEl.textContent = 'Type a book title first.';
+    return;
+  }
+
+  resultEl.style.display='none';
+  emptyEl.style.display='none';
+  emptyEl.className = 'empty';
+
+  setLoading(true);
+
+  try{
+    const response = await fetch('/api/check-book', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query })
+    });
+
+    const entry = await response.json();
+
+    if(!response.ok){
+      showError(entry.error || `Something went wrong pulling reviews for "${query}". Try again in a moment.`);
+      return;
+    }
+
+    if(!entry.found){
+      showError(`Couldn't find enough real reviews for "${query}" to give an honest verdict. Try the full title and author, or a better-known release.`);
+      return;
+    }
+
+    renderEntry(entry);
+    addToRecent(query, cacheKeyFor(query), entry.title);
+
+  } catch(err){
+    console.error('Hype or Not error:', err);
+    showError(`Something went wrong pulling reviews for "${query}". Try again in a moment.`);
+  } finally {
+    setLoading(false);
+  }
+}
+
+btn.addEventListener('click', checkBook);
+input.addEventListener('keydown', e=>{ if(e.key==='Enter') checkBook(); });
+</script>
+</body>
+</html>

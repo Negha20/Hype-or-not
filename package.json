@@ -1,0 +1,9 @@
+{
+  "name": "hype-or-not",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A reality check before you buy the book everyone's talking about.",
+  "dependencies": {
+    "@vercel/kv": "^2.0.0"
+  }
+}
